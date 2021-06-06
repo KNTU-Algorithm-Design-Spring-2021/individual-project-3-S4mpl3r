@@ -1,4 +1,5 @@
 from collections import defaultdict
+import random
 
 
 class FireTruck:
@@ -17,6 +18,9 @@ class FireTruck:
         self.streetGraph[u].append(v)
         self.streetGraph[v].append(u)
 
+    def isPromising(self, v, visited):
+        return v not in visited
+
     def dfs(self, v, visited):
         visited.append(v)
 
@@ -27,7 +31,7 @@ class FireTruck:
             return
 
         for neighbour in self.streetGraph[v]:
-            if neighbour not in visited:
+            if self.isPromising(neighbour, visited):
                 self.dfs(neighbour, visited)
 
         visited.pop()
@@ -38,6 +42,33 @@ class FireTruck:
         self.goal = goal
         for neighbour in self.streetGraph[start]:
             self.dfs(neighbour, visited)
+
+    def estimateComplexity(self, runs):
+        sum = 0
+        for _ in range(runs):
+            sum += self.estimate(1)
+
+        return sum / runs
+
+    def estimate(self, start):
+        v = start
+        visited = [v]
+        numnodes, m, mprod = 1, 1, 1
+        while m != 0:
+            t = len(self.streetGraph[v])
+            mprod = mprod * m
+            numnodes = numnodes + mprod*t
+            promisings = []
+            for neighbor in self.streetGraph[v]:
+                if self.isPromising(neighbor, visited):
+                    promisings.append(neighbor)
+            m = len(promisings)
+            if m != 0:
+                v = promisings[int(random.random() *
+                                   len(promisings))]
+                visited.append(v)
+
+        return numnodes
 
 
 def main():
@@ -57,6 +88,7 @@ def main():
             else:
                 print(f'CASE {case}:')
                 fireTruck.findAllPaths(1, goal)
+                # print(f'estimation: {fireTruck.estimateComplexity(10000)}')
                 print(
                     f'There are {len(fireTruck.paths)} routes from the firestation to streetcorner {fireTruck.goal}')
                 fireTruck = FireTruck()
